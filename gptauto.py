@@ -22,6 +22,9 @@ __SEND_TEXT_BUTTON_CSS_SELECTOR = "button.absolute"
 # CSS selector of the scroll down button
 __SCROLL_BUTTON_CSS_SELECTOR = "button.cursor-pointer"
 
+__WARNING_DIV_XPATH = '//*[@id="radix-:rf:"]'
+__WARNING_BTN_XPATH = "/html/body/div[3]/div/div/div/div[2]/div/button"
+
 # Works only on english localization, may have to change these...
 __STOP_BUTTON_TEXT = "Stop generating"
 __REGEN_BUTTON_TEXT = "Regenerate response"
@@ -119,11 +122,11 @@ def __click_stop(driver, timeout: int = 10):
 
 def __wait_for_warning(driver):
     try:
-        div = wait_element_by(driver, By.XPATH, '//*[@id="radix-:rf:"]', timeout=1)
+        div = wait_element_by(driver, By.XPATH, __WARNING_DIV_XPATH, timeout=1)
         btn = wait_element_by(
             driver,
             By.XPATH,
-            "/html/body/div[3]/div/div/div/div[2]/div/button",
+            __WARNING_BTN_XPATH,
             timeout=1,
         )
         if div and btn:
