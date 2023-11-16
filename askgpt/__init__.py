@@ -1,4 +1,5 @@
 """askgpt"""
-from .session import ChatSession
+from .factory import ChatSessionFactory
+from .session import ChatSession, ChatSessionConfig
 
-__all__ = ["ChatSession"]
+__all__ = ["ChatSessionFactory", "ChatSession", "ChatSessionConfig"]
