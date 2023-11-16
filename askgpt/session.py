@@ -1,5 +1,6 @@
 """ChatGPT session module"""
 from dataclasses import dataclass
+from logging import getLogger, CRITICAL
 from selgym.gym import (
     wait_element_by,
     wait_elements_by,
@@ -8,9 +9,9 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from .logger import LOGGER_NAME, log
 
-
-@dataclass(frozen=True)
+@dataclass
 class ChatSessionConfig:
     """ChatSession configuration class
     - `headless` -> Defaults to False, set webdriver headless mode.
@@ -36,6 +37,9 @@ class ChatSession:
     def __init__(self, config: ChatSessionConfig, driver: WebDriver = None) -> None:
         self.config: ChatSessionConfig = config
         self._driver: WebDriver = driver
+
+        if self.config.quiet:
+            getLogger(LOGGER_NAME).setLevel(CRITICAL)
 
     def __send_shift_enter(self) -> None:
         (

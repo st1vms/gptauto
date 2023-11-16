@@ -1,13 +1,12 @@
 """ChatGPT scraper session factory module"""
-from asyncio import get_event_loop, create_task, gather, Queue
+from asyncio import Queue
 from os import path as ospath
-from logging import getLogger
+from logging import getLogger, CRITICAL
 from selgym.gym import (
     get_firefox_webdriver,
     get_firefox_options,
     get_default_firefox_profile,
     cleanup_resources,
-    # wait_element_by,
 )
 from .session import ChatSession, ChatSessionConfig
 from .logger import log, LOGGER_NAME
@@ -17,7 +16,6 @@ class ChatSessionFactory:
     """ChatSession class"""
 
     _CHAT_URL = "https://chat.openai.com/"
-    _LOGIN_REDIRECT_URL = "https://chat.openai.com/auth/login"
 
     def __init__(
         self,
@@ -30,11 +28,13 @@ class ChatSessionFactory:
         """
 
         if quiet:
-            getLogger(LOGGER_NAME).setLevel("CRITICAL")
+            getLogger(LOGGER_NAME).setLevel(CRITICAL)
 
         self.config = config
 
-        if config.profile_path and not ospath.isdir(self.config.profile_path):
+        if self.config.profile_path is None or not ospath.isdir(
+            self.config.profile_path
+        ):
             log.warning(
                 "Firefox `profile_path` does not exists, falling back to default profile."
             )
@@ -42,39 +42,25 @@ class ChatSessionFactory:
 
         self._pool: Queue = Queue()
 
-    # TODO test this pls
-    def quit_all(self) -> None:
+    def close(self) -> None:
         """Utility method to call ChatSession.quit() on all started sessions using this factory
 
         Also performs cleanup of unused resources in temporary directories.
         """
-
-        async def _close(s: ChatSession):
-            s.quit()
-
-        async def _wrap() -> None:
-            tasks = []
+        try:
             while self._pool.qsize():
-                session = await self._pool.get()
-                tasks.append(create_task(_close(session)))
+                session = self._pool.get_nowait()
+                session.quit()
+        finally:
+            cleanup_resources()
 
-            try:
-                await gather(*tasks)
-            finally:
-                # Performs resource clenup
-                cleanup_resources()
-
-        get_event_loop().run_until_complete(_wrap())
-
-    def start(self, email: str = None, password: str = None) -> ChatSession | None:
+    def start(self) -> ChatSession | None:
         """Starts a new ChatSession instance, be sure to call its `quit()` method for disposal
 
         If the provided firefox profile does not already have a valid login
         this function will also attempt to login using given credentials.
 
-        If either `email` or `password` argument is None,
-        it will be auto retrieved from configuration file (creds.ini) inside current directory,
-        if no configuration file is present, it will be asked at runtime.
+        If either `email` or `password` argument is None, it will be asked at runtime.
         """
 
         driver = get_firefox_webdriver(
@@ -84,6 +70,16 @@ class ChatSessionFactory:
         )
 
         # Perform login check
+        driver.get(self._CHAT_URL)
+        driver.implicitly_wait(10)
+
+        if driver.current_url != self._CHAT_URL:
+            log.error(
+                "Please login into ChatGPT using this profile -> %s",
+                self.config.profile_path,
+            )
+            driver.quit()
+            return None
 
         # Adds session to factory pool and returns it
         s = ChatSession(self.config, driver=driver)

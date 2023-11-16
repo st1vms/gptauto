@@ -1,5 +1,5 @@
 """Logging module utility"""
-from logging import basicConfig, getLogger, INFO, Logger, StreamHandler
+from logging import getLogger, Logger, StreamHandler, INFO
 from colorlog import ColoredFormatter
 
 LOGGER_NAME = "askgpt"
@@ -26,5 +26,6 @@ __LOG_FORMATTER = ColoredFormatter(
 # Create a logger and set the formatter
 __LOG_HANDLER = StreamHandler()
 __LOG_HANDLER.setFormatter(__LOG_FORMATTER)
-basicConfig(level=INFO, handlers=[__LOG_HANDLER])
 log: Logger = getLogger(LOGGER_NAME)
+log.addHandler(__LOG_HANDLER)
+log.setLevel(INFO)
