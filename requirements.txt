@@ -1,3 +1,1 @@
-selenium
-undetected-chromedriver
-screeninfo
+selgym
