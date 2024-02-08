@@ -219,7 +219,7 @@ class GPTScraper:
         each element can either be a UserMessage or an AssistantMessage object"""
 
         elements = wait_elements_by(
-            self.driver, By.XPATH, CHAT_MESSAGE_XPATH, timeout=120
+            self.driver, By.XPATH, CHAT_MESSAGE_XPATH, timeout=10
         )
         if not elements:
             return
@@ -244,7 +244,7 @@ class GPTScraper:
                 yield AssistantMessage(msg_id, div.text)
 
     @assert_driver
-    def wait_completion(self, timeout: float = 240) -> None:
+    def wait_completion(self, timeout: float = 60) -> None:
         """Waits for the completion to be actually complete,
         based off the visibility of action buttons"""
 

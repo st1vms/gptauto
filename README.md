@@ -1,118 +1,112 @@
-<a href="https://www.buymeacoffee.com/st1vms"><img src="https://img.buymeacoffee.com/button-api/?text=1 Pizza Margherita&emoji=🍕&slug=st1vms&button_colour=0fa913&font_colour=ffffff&font_family=Bree&outline_colour=ffffff&coffee_colour=FFDD00" /></a>
 # gptauto
 
-## A fully functional ChatGPT selenium scraper written in Python
+Chat GPT scraper
 
-- **Table of Content**
-    - [Requirements](#requirements)
-    - [Examples](#examples)
-    - [Notes](#notes)
-------------
+## What is this?
 
-## Requirements
+This Python software provides access to the conversational capabilities of [ChatGPT](https://chat.openai.com/) through a simple chat messaging interface.
 
-- Install pip requirements
-    ```pip install -r requirements.txt```
+While not officially supported by OpenAI, this library can enable interesting conversational applications.
 
-- Download Firefox and [geckodriver](https://github.com/mozilla/geckodriver/releases) and place it in folder registered in PATH.
+It allows for:
 
-- In a Firefox profile of your choise, (or default one) ensure you are logged in to chatgpt.
+- Creating chat sessions with ChatGPT and getting chat IDs.
+- Sending messages to specific chat ids, and even toggle chat history.
+- Get an ordered, strong typed list of messages from any chat.
 
-- Provide the firefox profile absolute path to the `ask_chatgpt` function, using the `profile_path` parameter.
+It relies on [geckodriver](https://github.com/mozilla/geckodriver/releases), [selenium-wire](https://github.com/wkeeling/selenium-wire) and [selgym](https://github.com/st1vms/selgym) libraries to speed-up the completion waiting process, along some cool tricks for bot detection mitigations, such as random time intervals for character typing, button hovers and much more.
 
--------------
+## Table of Content
 
-## Examples
+- [Installation](#installation)
+- [Uninstallation](#uninstallation)
+- [Example Usage](#example-usage)
+  - [Toggling Chat History](#toggling-chat-history)
+- [Known Bugs](#known-bugs)
+- [Disclaimer](#disclaimer)
+- [Donations](#donations)
 
-- ### **Example asking one question and returning answer**
+## Installation
 
-    ```python
-    import gptauto
+Download this repository and install it from source by runnig this command inside the repository folder:
 
-    QUESTION = input("Ask question\n>>").lstrip().rstrip()
-    res = gptauto.ask_chatgpt(QUESTION,
-        headless=True,
-        quiet=True,
-    )
-    print(res)
-    ```
+```shell
+pip install -e .
+```
 
-- ### **Example with a long text as input**
+## Uninstallation
 
-    ```python
-    import gptauto
+```shell
+pip uninstall gptauto
+```
 
-    long_text = ""
-    with open("text.txt", "r") as fp:
-        transcript = fp.read().rstrip()
+## Example usage
 
-    # Any of these prompts can be omitted
+```py
+from gptauto.scraper import GPTScraper
 
-    START_PROMPT = (
-        "A message with a start prompt, if present is written before question message"
-    )
+# Set to None to use default firefox profile
+# Set to a string with the root profile directory path
+# to use a different firefox profile
+profile_path = None
 
-    # These will only be written if
-    # the text was long enough to be
-    # separated in batches
-    START_BATCH_PROMPT = "<WRITTEN BEFORE TEXT CHUNK>\n"
-    END_BATCH_PROMPT = "<WRITTEN AFTER TEXT CHUNK>\n"
+scraper = GPTScraper(profile_path="")
+try:
+    # Creates a new webdriver instance
+    # opening chatgpt page
+    scraper.start()
 
-    END_PROMPT = (
-        "This message if present will be written at last, after every chunk is sent"
-    )
+    # Pick text to send
+    text = input("\nText\n>>").strip()
+    scraper.send_message(text)
 
-    res = gptauto.ask_chatgpt(
-        long_text,
-        start_prompt=START_PROMPT,
-        start_batch_prompt=START_BATCH_PROMPT,
-        end_batch_prompt=END_BATCH_PROMPT,
-        end_prompt=END_PROMPT,
-        headless=True,  # False by default
-        quiet=False,  # Use False to watch progress
-    )
-    ```
+    # Waits for completion to finish
+    scraper.wait_completion()
 
-- ### **Example of a continuous chat**
+    # Retrieves chat messages
+    # as an ordered list of AssistantMessage
+    # or UserMessage
+    messages = scraper.get_messages()
+    print(messages)
+finally:
+    # Gracefully quit the webdriver instance
+    scraper.quit()
+    # After calling quit()
+    # a new session can be started with .start()
+```
 
-    ```python
-    import gptauto
-    import traceback
+### Toggling chat history
 
-    # None initialize driver
-    driver = None
+```py
+from gptauto.scraper import GPTScraper
 
-    # Previous messages used for filtering response
-    last_messages = []
+# Open new session on default firefox profile
+scraper = GPTScraper()
+try:
+    scraper.start()
 
-    while True:
-        try:
-            QUESTION = input("\nAsk question\n>>").lstrip().rstrip()
-            # If chat_mode is enabled, ask_chatgpt will return a tuple
-            # with (driver_intsance, response).
-            driver, res = gptauto.ask_chatgpt(
-                QUESTION,
-                headless=True,  # False by default
-                quiet=True,  # Disable status print()
-                chat_mode=True,  # Enable chat mode
-                driver=driver,  # Pass cached driver instance
-            )
+    # Toggle chat history
+    # If On -> Off
+    # If Off -> On
+    scraper.toggle_history()
+finally:
+    scraper.quit()
+```
 
-            # Filter old answers...
-            for m in last_messages:
-                res = res.replace(m, "")
-            last_messages.append(res)
+## Known bugs
 
-            print(res)
-        except Exception as e:
-            traceback.print_exc()
-            # Once done, ensure to call quit() on driver instance
-            if driver:
-                driver.quit()
-            break
-    ```
+- Sometimes a captcha may appear after sending a message,
+so far this software does nothing to prevent this or act accordingly, if a captcha is triggered, the only current solution is to solve it manually, having non-headless behavior set by default.
 
-_________
+- Currently this software does not work in headless mode, I don't know if I will ever be able to find a solution in the near future. Feel free to open a pull request if you found a on and would like to contribute, it will be much appreciated :)
 
-## Notes
-For bug reporting, please feel free to open an issue in this repository : )
+## Disclaimer
+
+This repository provides a way for automating free accounts on [ChatGPT](https://chat.openai.com/).
+Please note that this software is not endorsed, supported, or maintained by OpenAI. Use it at your own discretion and risk. OpenAI may make changes to their official product or APIs at any time, which could affect the functionality of this software. We do not guarantee the accuracy, reliability, or security of the information and data retrieved using this API. By using this repository, you agree that the maintainers are not responsible for any damages, issues, or consequences that may arise from its usage. Always refer to OpenAI's official documentation and terms of use. This project is maintained independently by contributors who are not affiliated with OpenAI.
+
+## Donations
+
+A huge thank you in advance to anyone who wants to donate :)
+
+[![Buy Me a Pizza](https://img.buymeacoffee.com/button-api/?text=1%20Pizza%20Margherita&emoji=🍕&slug=st1vms&button_colour=0fa913&font_colour=ffffff&font_family=Bree&outline_colour=ffffff&coffee_col
