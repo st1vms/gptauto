@@ -1,4 +1,5 @@
 """GPT Scraper module"""
+
 from json import loads
 from time import perf_counter
 from dataclasses import dataclass
@@ -14,7 +15,12 @@ from selgym.gym import (
     WebElement,
     By,
 )
-from .elements import TEXTAREA_CSSS, CHAT_MESSAGE_XPATH
+from .elements import (
+    TEXTAREA_CSSS,
+    CHAT_MESSAGE_XPATH,
+    SETTINGS_MENU_CSSS,
+    PROFILE_BUTTON_CSSS,
+)
 from .utils import random_sleep, assert_uuid
 from .errors import DriverNotInitializedError
 
@@ -139,7 +145,7 @@ class GPTScraper:
         self.driver.get(url)
         self.driver.implicitly_wait(10)
 
-        self.disable_styles()
+        # self.disable_styles()
         self.edit_zoom(40)  # TODO Configure these
 
     def quit(self) -> None:
@@ -258,3 +264,33 @@ class GPTScraper:
         raise TimeoutError(
             f"{timeout} seconds elapsed waiting for completion to finish"
         )
+
+    @assert_driver
+    def toggle_history(self) -> None:
+        """Toggle chat history by opening settings page"""
+        profile_button = wait_element_by(
+            self.driver, By.CSS_SELECTOR, PROFILE_BUTTON_CSSS
+        )
+        self.__hover_click(profile_button)
+
+        settings_menu = wait_element_by(
+            self.driver, By.CSS_SELECTOR, SETTINGS_MENU_CSSS
+        )
+
+        buttons = wait_elements_by(settings_menu, By.TAG_NAME, "a")
+        if len(buttons) != 3:
+            return
+        btn = buttons[1]
+        self.__hover_click(btn)
+
+        random_sleep(0.1, 1)  # TODO Customize this
+
+        ActionChains(self.driver).key_down(Keys.TAB).key_down(Keys.ARROW_DOWN).key_up(
+            Keys.ARROW_DOWN
+        ).key_up(Keys.TAB).perform()
+
+        random_sleep(0.1, 1)  # TODO Customize this
+
+        ActionChains(self.driver).key_down(Keys.TAB).key_up(Keys.TAB).key_down(
+            Keys.TAB
+        ).key_up(Keys.TAB).key_down(Keys.ENTER).key_up(Keys.ENTER).perform()
