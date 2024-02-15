@@ -12,7 +12,7 @@ It allows for:
 - Sending messages to specific chat ids, and even toggle chat history.
 - Get an ordered, strong typed list of messages from any chat.
 
-It relies on [geckodriver](https://github.com/mozilla/geckodriver), [selenium-wire](https://github.com/wkeeling/selenium-wire) and [selgym (selenium) ](https://github.com/st1vms/selgym) libraries only.
+It relies on [geckodriver](https://github.com/mozilla/geckodriver), [selenium-wire](https://github.com/wkeeling/selenium-wire) and [selgym (selenium)](https://github.com/st1vms/selgym) libraries only.
 
 ## Table of Content
 
