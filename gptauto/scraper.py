@@ -54,12 +54,18 @@ class GPTScraper:
     driver: webdriver.Firefox = None
     messages: Dict[str, Union[UserMessage, AssistantMessage]] = None
 
-    def __init__(self, profile_path: str = None, headless: bool = False) -> None:
+    def __init__(
+        self,
+        profile_path: str = None,
+        headless: bool = False,
+        max_type_speed_sec: float = 0.5,
+    ) -> None:
         self.headless: bool = headless
         self.firefox_profile_path = profile_path
         if self.firefox_profile_path is None:
             self.firefox_profile_path = get_default_firefox_profile()
 
+        self.max_type_speed_sec = max_type_speed_sec
         self.gecko_options = self.__get_gecko_options()
         self.selwire_opts = self.__get_selwire_options()
         self.driver = None
@@ -164,14 +170,13 @@ class GPTScraper:
         a = ActionChains(self.driver).move_to_element(element).click_and_hold(element)
         a.perform()
 
-        # TODO Configure sleep range
-        random_sleep(0.2, 2)  # Perform random hold time
+        random_sleep(0.1, 1)  # Perform random hold time
         a.release().perform()
 
     def __send_newline(self, actions: ActionChains) -> None:
 
         # TODO Configure sleep range
-        sleep_range = (0.1, 2)
+        sleep_range = (0.001, 0.2)
         actions.key_down(Keys.LEFT_SHIFT).perform()
         random_sleep(*sleep_range)
         actions.key_down(Keys.ENTER).perform()
@@ -204,7 +209,7 @@ class GPTScraper:
         # Send text to textarea box
         actions = ActionChains(self.driver).move_to_element(textarea).click()
         for ch in text:
-            random_sleep(0.1, 0.5)
+            random_sleep(0.001, self.max_type_speed_sec)
             if ch == "\n":
                 self.__send_newline(actions)
             else:
@@ -244,13 +249,13 @@ class GPTScraper:
                 yield AssistantMessage(msg_id, div.text)
 
     @assert_driver
-    def wait_completion(self, timeout: float = 60) -> None:
+    def wait_completion(self, timeout: float = 0) -> None:
         """Waits for the completion to be actually complete,
         based off the visibility of action buttons"""
 
         start = perf_counter()
 
-        while perf_counter() - start <= timeout:
+        while timeout == 0 or perf_counter() - start <= timeout:
             for request in self.driver.requests:
                 if (
                     request.method == "POST"
@@ -260,10 +265,14 @@ class GPTScraper:
                 ):
                     res = loads(request.response.body.decode("utf-8"))
                     if res and "status" in res:
+                        # Add a sleep time, ensuring
+                        # a complete answer is retrieved
+                        random_sleep(0.5, 1)
                         return
-        raise TimeoutError(
-            f"{timeout} seconds elapsed waiting for completion to finish"
-        )
+        if timeout != 0:
+            raise TimeoutError(
+                f"{timeout} seconds elapsed waiting for completion to finish"
+            )
 
     @assert_driver
     def toggle_history(self) -> None:
