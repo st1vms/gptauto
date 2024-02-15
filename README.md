@@ -117,7 +117,7 @@ finally:
 - Sometimes a captcha may appear after sending a message,
 so far this software does nothing to prevent this or act accordingly, if a captcha is triggered, the only current solution is to solve it manually, having non-headless behavior set by default.
 
-- Currently this software does not work in headless mode, I don't know if I will ever be able to find a solution in the near future. Feel free to open a pull request if you found a on and would like to contribute, it will be much appreciated :)
+- Currently this software does not work in headless mode, I don't know if I will ever be able to find a solution in the near future. Feel free to open a pull request if you found a better one and would like to contribute 🦾
 
 ## Disclaimer
 
