@@ -3,7 +3,7 @@
 
 import sys
 import argparse
-from gptauto.scraper import GPTScraper
+from gptauto.scraper import GPTScraper, AssistantMessage
 
 
 PROFILE_PATH = None
@@ -41,7 +41,7 @@ def _main() -> None:
     args = parser.parse_args()
 
     if text is None:
-        text = args.text.strip()
+        text = args.TEXT.strip()
 
     if args.prompt is not None:
         text = f"{args.prompt.strip()}\n\n{text}"
@@ -58,8 +58,8 @@ def _main() -> None:
         scraper.send_message(text)
         scraper.wait_completion()
         messages = list(scraper.get_messages())
-        if messages:
-            print(f"\nANSWER:\n\n{messages[-1].text}\n")
+        if messages and isinstance(messages[-1], AssistantMessage):
+            print(f"{messages[-1].text.strip()}")
     except KeyboardInterrupt:
         return
     finally:
