@@ -1,10 +1,8 @@
 # gptauto
 
-Chat GPT scraper
-
 ## What is this?
 
-This Python software provides access to the conversational capabilities of [ChatGPT](https://chat.openai.com/) through a simple chat messaging interface.
+This Python scraper provides access to the conversational capabilities of [ChatGPT](https://chat.openai.com/) through a simple chat messaging interface.
 
 While not officially supported by OpenAI, this library can enable interesting conversational applications.
 
