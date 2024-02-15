@@ -14,12 +14,13 @@ It allows for:
 - Sending messages to specific chat ids, and even toggle chat history.
 - Get an ordered, strong typed list of messages from any chat.
 
-It relies on [geckodriver](https://github.com/mozilla/geckodriver/releases), [selenium-wire](https://github.com/wkeeling/selenium-wire) and [selgym](https://github.com/st1vms/selgym) libraries to speed-up the completion waiting process, along some cool tricks for bot detection mitigations, such as random time intervals for character typing, button hovers and much more.
+It relies on [geckodriver](https://github.com/mozilla/geckodriver), [selenium-wire](https://github.com/wkeeling/selenium-wire) and [selgym](https://github.com/st1vms/selgym) libraries to speed-up the completion waiting process, along some cool tricks for bot detection mitigations, such as random time intervals for character typing, button hovers and much more.
 
 ## Table of Content
 
 - [Installation](#installation)
 - [Uninstallation](#uninstallation)
+- [Requirements](#requirements)
 - [Example Usage](#example-usage)
   - [Toggling Chat History](#toggling-chat-history)
 - [Known Bugs](#known-bugs)
@@ -40,6 +41,14 @@ pip install -e .
 pip uninstall gptauto
 ```
 
+## Requirements
+
+- Python >= 3.10
+- [geckodriver](https://github.com/mozilla/geckodriver/releases) installed in a folder registered in PATH
+- A valid login to [ChatGPT](https://chat.openai.com/) on a newly created Firefox profile
+  (A new Firefox profile is needed in order for `selenium-wire` proxy to work).
+- Disabling ChatGPT's chat history on this profile is also recommended.
+
 ## Example usage
 
 ```py
@@ -48,31 +57,41 @@ from gptauto.scraper import GPTScraper
 # Set to None to use default firefox profile
 # Set to a string with the root profile directory path
 # to use a different firefox profile
-profile_path = None
+PROFILE_PATH = None
 
-scraper = GPTScraper(profile_path="")
-try:
-    # Creates a new webdriver instance
-    # opening chatgpt page
-    scraper.start()
 
-    # Pick text to send
-    text = input("\nText\n>>").strip()
-    scraper.send_message(text)
+def _main() -> None:
 
-    # Waits for completion to finish
-    scraper.wait_completion()
+    scraper = GPTScraper(profile_path=PROFILE_PATH)
+    try:
+        # Creates a new webdriver instance
+        # opening chatgpt page
+        scraper.start()
 
-    # Retrieves chat messages
-    # as an ordered list of AssistantMessage
-    # or UserMessage
-    messages = scraper.get_messages()
-    print(messages)
-finally:
-    # Gracefully quit the webdriver instance
-    scraper.quit()
-    # After calling quit()
-    # a new session can be started with .start()
+        # Pick text to send
+        text = input("\nText\n>>").strip()
+        scraper.send_message(text)
+
+        # Waits for completion to finish
+        scraper.wait_completion()
+
+        # Retrieves chat messages
+        # as an ordered list of AssistantMessage
+        # or UserMessage
+        messages = list(scraper.get_messages())
+        if messages:
+            print(f"\nANSWER:\n\n{messages[-1].text}\n")
+    except KeyboardInterrupt:
+        return
+    finally:
+        # Gracefully quit the webdriver instance
+        scraper.quit()
+        # After calling quit()
+        # a new session can be started with .start()
+
+
+if __name__ == "__main__":
+    _main()
 ```
 
 ### Toggling chat history
