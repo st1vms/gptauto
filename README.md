@@ -22,6 +22,8 @@ It relies on [geckodriver](https://github.com/mozilla/geckodriver), [selenium-wi
 - [Uninstallation](#uninstallation)
 - [Requirements](#requirements)
 - [Example Usage](#example-usage)
+  - [ask-gpt](#ask-gpt)
+  - [Using Python](#using-python)
   - [Toggling Chat History](#toggling-chat-history)
 - [Known Bugs](#known-bugs)
 - [Disclaimer](#disclaimer)
@@ -50,6 +52,40 @@ pip uninstall gptauto
 - Disabling ChatGPT's chat history on this profile is also recommended.
 
 ## Example usage
+
+### ask-gpt
+
+By installing this library using `pip`, a command-line interface is provided, `ask-gpt`, it takes one positional argument, the input TEXT for chat-gpt, that can also be prepended with an header (prompt) using the `-p` string parameter.
+
+Other parameters are:
+
+```txt
+-f Firefox profile
+(Firefox root profile path string, default behaviour is creating a new one)
+
+-ts Type speed
+(Maximum type speed expressed as a float number >= 0.001, defaults to 0.01)
+This value is used to randomly sleep for a specific interval between each individual key-stroke.
+
+-nh No-Headless
+(Turn off selenium Headless mode, for debugging purposes)
+```
+
+This utility is also pipe friendly, having the ability to pipe input strings as the Chat GPT input directly into the command.
+
+For example in Linux distributions:
+
+```bash
+echo "Roll a D20" | ask-gpt -p "Only answer with a number" | cat "output.txt"
+```
+
+Or in Windows CMD:
+
+```cmd
+( echo "Roll a D20" & ask-gpt -p "Only answer with a number" ) >> output.txt
+```
+
+### Using Python
 
 ```py
 from gptauto.scraper import GPTScraper

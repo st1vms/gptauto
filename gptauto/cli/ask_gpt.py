@@ -3,10 +3,10 @@
 
 import sys
 import argparse
+from selgym import cleanup_resources
 from gptauto.scraper import GPTScraper, AssistantMessage
 
-
-PROFILE_PATH = None
+PROFILE_PATH = ""
 
 
 def main() -> None:
@@ -25,7 +25,7 @@ def main() -> None:
         "-ts",
         "--type-speed",
         type=float,
-        default=0.1,
+        default=0.01,
         help="Override max type speed in seconds (default 0.1), minimum is always 0.001",
     )
     parser.add_argument(
@@ -55,6 +55,11 @@ def main() -> None:
     )
 
     try:
+        # Perform temporary directories cleanup on start
+        # Required to start the geckodriver in case temp
+        # directories are full.
+        cleanup_resources()
+
         scraper.start()
         scraper.send_message(text)
         scraper.wait_completion()
@@ -62,7 +67,9 @@ def main() -> None:
         if messages and isinstance(messages[-1], AssistantMessage):
             print(f"{messages[-1].text.strip()}")
     except KeyboardInterrupt:
-        return
+        pass
+    except TimeoutError:
+        pass
     finally:
         scraper.quit()
 
