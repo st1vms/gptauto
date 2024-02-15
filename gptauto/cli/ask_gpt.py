@@ -9,7 +9,8 @@ from gptauto.scraper import GPTScraper, AssistantMessage
 PROFILE_PATH = None
 
 
-def _main() -> None:
+def main() -> None:
+    """ask-gpt main entry point"""
     parser = argparse.ArgumentParser(description="Ask GPT utility")
     text = None
     if not sys.stdin.isatty():
@@ -67,4 +68,4 @@ def _main() -> None:
 
 
 if __name__ == "__main__":
-    _main()
+    main()

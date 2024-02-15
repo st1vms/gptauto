@@ -28,6 +28,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    entry_points={'console_scripts':['ask-gpt=gptauto.cli.ask_gpt:main']},
     python_requires=">=3.9",
     install_requires=[
         "selgym",
