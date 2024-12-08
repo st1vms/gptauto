@@ -1,7 +1,5 @@
 """gptauto module"""
 
-from .scraper import GPTScraper
-from .errors import DriverNotInitializedError
-from .utils import random_sleep
+from .gpt_scraper import GPTScraper, DriverNotInitializedError
 
-__all__ = ["GPTScraper", "DriverNotInitializedError", "random_sleep"]
+__all__ = ["GPTScraper", "DriverNotInitializedError"]

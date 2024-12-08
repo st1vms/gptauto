@@ -4,7 +4,7 @@
 import sys
 import argparse
 from selgym import cleanup_resources
-from gptauto.scraper import GPTScraper, AssistantMessage
+from gptauto.gpt_scraper import GPTScraper, AssistantMessage
 
 PROFILE_PATH = ""
 

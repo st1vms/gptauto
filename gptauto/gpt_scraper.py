@@ -1,7 +1,9 @@
 """GPT Scraper module"""
 
 from json import loads
-from time import perf_counter
+from time import perf_counter, sleep
+from random import uniform
+from uuid import UUID
 from dataclasses import dataclass
 from typing import Iterator, Union, Dict
 from seleniumwire import webdriver
@@ -16,16 +18,18 @@ from selgym.gym import (
     WebElement,
     By,
 )
-from .elements import (
-    TEXTAREA_CSSS,
-    CHAT_MESSAGE_XPATH,
-    SETTINGS_MENU_CSSS,
-    PROFILE_BUTTON_CSSS,
-)
-from .utils import random_sleep, assert_uuid
-from .errors import DriverNotInitializedError
 
 BASE_URL = "https://chatgpt.com/"
+
+TEXTAREA_CSSS = 'div[id="prompt-textarea"]'
+
+FINAL_COMPLETION_CSSS = 'button[class*="md:group-[.final-completion]:visible"]'
+
+PROFILE_BUTTON_CSSS = 'img[alt="User"]'
+
+SETTINGS_MENU_CSSS = 'div[id^="headlessui-menu-items"]'
+
+CHAT_MESSAGE_XPATH = '//div[contains(@class, "text-message") and (contains(@data-message-author-role, "assistant") or contains(@data-message-author-role, "user"))]'
 
 
 @dataclass(frozen=True)
@@ -47,6 +51,22 @@ class AssistantMessage(ChatMessage):
 @dataclass(frozen=True)
 class UserMessage(ChatMessage):
     """User chat message"""
+
+
+class DriverNotInitializedError(Exception):
+    """Exception for when a scraper operation is called,
+    without initializing driver instance"""
+
+
+def random_sleep(_min: float, _max: float) -> None:
+    """Perform a random sleep in the interval [_min, _max]"""
+    sleep(round(uniform(_min, _max), 3))
+
+
+def assert_uuid(text: str) -> bool:
+    """Assert if `text` is a valid uuid4,
+    raises ValueError in case it's not"""
+    return str(UUID(text, version=4))
 
 
 class GPTScraper:
@@ -198,7 +218,7 @@ class GPTScraper:
             "arguments[0].textContent=arguments[1]", textarea, text
         )
 
-        random_sleep(0.5, 1)
+        random_sleep(1, 2)
 
         actions = ActionChains(self.driver).move_to_element(textarea)
         actions.key_down(Keys.CONTROL).key_down(Keys.ENTER).key_up(Keys.ENTER).key_down(
