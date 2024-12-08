@@ -22,13 +22,6 @@ def main() -> None:
         "-nh", "--no-headless", action="store_true", help="Toggle headless mode off"
     )
     parser.add_argument(
-        "-ts",
-        "--type-speed",
-        type=float,
-        default=0.01,
-        help="Override max type speed in seconds (default 0.1), minimum is always 0.001",
-    )
-    parser.add_argument(
         "-f",
         "--firefox-profile",
         type=str,
@@ -50,16 +43,10 @@ def main() -> None:
     firefox_profile = args.firefox_profile if args.firefox_profile else PROFILE_PATH
     scraper = GPTScraper(
         profile_path=firefox_profile,
-        max_type_speed_sec=args.type_speed,
         headless=not args.no_headless,
     )
 
     try:
-        # Perform temporary directories cleanup on start
-        # Required to start the geckodriver in case temp
-        # directories are full.
-        cleanup_resources()
-
         scraper.start()
         scraper.send_message(text)
         scraper.wait_completion()
@@ -72,7 +59,7 @@ def main() -> None:
         pass
     finally:
         scraper.quit()
-
+        cleanup_resources()
 
 if __name__ == "__main__":
     main()

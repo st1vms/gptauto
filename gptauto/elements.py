@@ -1,6 +1,6 @@
 """GPT's web elements selectors/paths"""
 
-TEXTAREA_CSSS = 'textarea[id="prompt-textarea"]'
+TEXTAREA_CSSS = 'div[id="prompt-textarea"]'
 
 FINAL_COMPLETION_CSSS = 'button[class*="md:group-[.final-completion]:visible"]'
 

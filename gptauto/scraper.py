@@ -7,6 +7,7 @@ from typing import Iterator, Union, Dict
 from seleniumwire import webdriver
 from selenium.webdriver import Keys
 from selgym.gym import (
+    cleanup_resources,
     get_default_firefox_profile,
     get_firefox_options,
     wait_element_by,
@@ -24,7 +25,7 @@ from .elements import (
 from .utils import random_sleep, assert_uuid
 from .errors import DriverNotInitializedError
 
-BASE_URL = "https://chat.openai.com"
+BASE_URL = "https://chatgpt.com/"
 
 
 @dataclass(frozen=True)
@@ -58,14 +59,12 @@ class GPTScraper:
         self,
         profile_path: str = None,
         headless: bool = False,
-        max_type_speed_sec: float = 0.5,
     ) -> None:
         self.headless: bool = headless
         self.firefox_profile_path = profile_path
         if self.firefox_profile_path is None:
             self.firefox_profile_path = get_default_firefox_profile()
 
-        self.max_type_speed_sec = max_type_speed_sec
         self.gecko_options = self.__get_gecko_options()
         self.selwire_opts = self.__get_selwire_options()
         self.driver = None
@@ -165,6 +164,8 @@ class GPTScraper:
         # Clear message cache
         self.messages.clear()
 
+        cleanup_resources()
+
     def __hover_click(self, element: WebElement) -> None:
         """Hover and click on a specific `WebElement`"""
         a = ActionChains(self.driver).move_to_element(element).click_and_hold(element)
@@ -172,19 +173,6 @@ class GPTScraper:
 
         random_sleep(0.1, 1)  # Perform random hold time
         a.release().perform()
-
-    def __send_newline(self, actions: ActionChains) -> None:
-
-        # TODO Configure sleep range
-        sleep_range = (0.001, 0.2)
-        actions.key_down(Keys.LEFT_SHIFT).perform()
-        random_sleep(*sleep_range)
-        actions.key_down(Keys.ENTER).perform()
-        random_sleep(*sleep_range)
-        actions.key_up(Keys.ENTER).perform()
-        random_sleep(*sleep_range)
-        actions.key_up(Keys.LEFT_SHIFT).perform()
-        random_sleep(*sleep_range)
 
     @assert_driver
     def current_chat_id(self) -> str | None:
@@ -206,17 +194,16 @@ class GPTScraper:
             self.driver, By.CSS_SELECTOR, TEXTAREA_CSSS, timeout=10
         )
 
-        # Send text to textarea box
-        actions = ActionChains(self.driver).move_to_element(textarea).click()
-        for ch in text:
-            random_sleep(0.001, self.max_type_speed_sec)
-            if ch == "\n":
-                self.__send_newline(actions)
-            else:
-                actions.send_keys(ch).perform()
+        self.driver.execute_script(
+            "arguments[0].textContent=arguments[1]", textarea, text
+        )
 
-        # Sends message using Enter key
-        actions.key_down(Keys.ENTER).key_up(Keys.ENTER).perform()
+        random_sleep(0.5, 1)
+
+        actions = ActionChains(self.driver).move_to_element(textarea)
+        actions.key_down(Keys.CONTROL).key_down(Keys.ENTER).key_up(Keys.ENTER).key_down(
+            Keys.CONTROL
+        ).perform()
 
     @assert_driver
     def get_messages(self) -> Iterator[Union[UserMessage, AssistantMessage]]:
@@ -259,7 +246,7 @@ class GPTScraper:
             for request in self.driver.requests:
                 if (
                     request.method == "POST"
-                    and request.url == "https://chat.openai.com/backend-api/lat/r"
+                    and request.url == "https://chatgpt.com/backend-api/lat/r"
                     and request.response
                     and request.response.body
                 ):
